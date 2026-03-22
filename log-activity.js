@@ -27,9 +27,15 @@ const LogActivityScreen = (() => {
       return;
     }
 
+    // Get activity log for progress display
+    const weekKey = App.getWeekKey();
+    const activityLog = await API.getItems('ActivityLog');
+
     const today = App.formatDateInput(new Date());
 
     container.innerHTML = `
+      <div id="activity-goal-progress" style="margin-bottom: 12px;"></div>
+
       <div class="card">
         <div class="form-group">
           <label class="form-label" for="activity-goal">Goal</label>
@@ -44,7 +50,7 @@ const LogActivityScreen = (() => {
           <label class="form-label" for="activity-value">Value</label>
           <input class="form-input" type="number" id="activity-value"
                  min="0" step="any" inputmode="decimal"
-                 placeholder="Enter value">
+                 value="1">
           <div class="form-hint" id="activity-value-hint"></div>
         </div>
 
@@ -65,18 +71,55 @@ const LogActivityScreen = (() => {
       </div>
     `;
 
-    bindEvents(eligible);
+    bindEvents(eligible, activityLog, weekKey);
+    updateGoalProgress(eligible, activityLog, weekKey);
     updateValueHint(eligible);
   }
 
-  function bindEvents(goals) {
+  function bindEvents(goals, activityLog, weekKey) {
     const goalSelect = document.getElementById('activity-goal');
     const dateInput = document.getElementById('activity-date');
     const saveBtn = document.getElementById('activity-save-btn');
 
-    goalSelect.addEventListener('change', () => updateValueHint(goals));
+    goalSelect.addEventListener('change', () => {
+      updateValueHint(goals);
+      updateGoalProgress(goals, activityLog, weekKey);
+    });
     dateInput.addEventListener('change', () => validateDate());
     saveBtn.addEventListener('click', () => save());
+  }
+
+  function updateGoalProgress(goals, activityLog, weekKey) {
+    const goalId = parseInt(document.getElementById('activity-goal').value, 10);
+    const goal = goals.find(g => g.ID === goalId);
+    const progressEl = document.getElementById('activity-goal-progress');
+    if (!goal || !progressEl) return;
+
+    const entries = activityLog.filter(e => e.GoalID === goalId && e.WeekKey === weekKey);
+    const actual = entries.reduce((sum, e) => sum + e.Value, 0);
+    const target = goal.TargetValue;
+    const pct = target > 0 ? Math.min((actual / target) * 100, 115) : 0;
+    const barPct = Math.min(pct, 100);
+
+    progressEl.innerHTML = `
+      <div class="card">
+        <div class="flex-between" style="margin-bottom: 4px;">
+          <span style="font-size: 13px; font-weight: 500;">This Week's Progress</span>
+          <span class="text-muted" style="font-size: 12px;">
+            ${formatActual(actual, goal)} / ${target} ${escHtml(goal.TargetUnit)}
+          </span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-bar__fill ${pct >= 100 ? 'progress-bar__fill--success' : ''}"
+               style="width: ${barPct}%;"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  function formatActual(actual, goal) {
+    if (goal.GoalType === 'frequency') return Math.floor(actual);
+    return actual % 1 === 0 ? actual : actual.toFixed(1);
   }
 
   function updateValueHint(goals) {

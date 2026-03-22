@@ -446,6 +446,21 @@ const GoalsScreen = (() => {
     App.navigateToScreen('settings-goal-detail');
   });
 
+  // Intercept back button on Goals list to return to Weekly Review if flagged
+  document.addEventListener('click', (e) => {
+    const backBtn = e.target.closest('[data-back="settings-menu"]');
+    if (!backBtn) return;
+    // Only intercept if we're on the goals screen and the flag is set
+    const goalsScreen = backBtn.closest('[data-screen="settings-goals"]');
+    if (goalsScreen && App._returnToWeeklyReview) {
+      e.stopPropagation();
+      e.preventDefault();
+      App._returnToWeeklyReview = false;
+      App.switchTab('log');
+      setTimeout(() => App.navigateToScreen('log-weekly-review'), 50);
+    }
+  }, true); // capture phase to beat the default handler
+
   document.addEventListener('screen:enter', (e) => {
     if (e.detail.screen === 'settings-goals') {
       isWeightMode = false;

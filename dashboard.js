@@ -59,25 +59,30 @@ const DashboardScreen = (() => {
 
       let html = '';
 
-      // 1. System goal pills
+      // 1. System goal pills — tappable when pending
       html += `
         <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-          <span class="pill pill--${weighInCredited ? 'success' : 'warning'}" style="flex: 1; justify-content: center;">
+          <span class="pill pill--${weighInCredited ? 'success' : 'warning'}"
+                style="flex: 1; justify-content: center; ${!weighInCredited ? 'cursor: pointer;' : ''}"
+                ${!weighInCredited ? 'id="dash-pill-weighin"' : ''}>
             ${weighInCredited ? '✓' : '○'} Weigh-in
           </span>
-          <span class="pill pill--${reviewCredited ? 'success' : 'warning'}" style="flex: 1; justify-content: center;">
+          <span class="pill pill--${reviewCredited ? 'success' : 'warning'}"
+                style="flex: 1; justify-content: center; ${!reviewCredited ? 'cursor: pointer;' : ''}"
+                ${!reviewCredited ? 'id="dash-pill-review"' : ''}>
             ${reviewCredited ? '✓' : '○'} Review
           </span>
         </div>
       `;
 
-      // 2. Bank balance
+      // 2. Bank balance — tappable to ledger
       html += `
-        <div class="card" style="text-align: center; padding: 20px;">
+        <div class="card" id="dash-bank-balance" style="text-align: center; padding: 20px; cursor: pointer;">
           <div class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">Bank Balance</div>
           <div style="font-size: 32px; font-weight: 700; color: var(--accent); font-family: var(--font-mono);">
             ${App.formatCurrency(bankBalance)}
           </div>
+          <div class="text-muted" style="font-size: 11px; margin-top: 4px;">Tap to view ledger</div>
         </div>
       `;
 
@@ -178,6 +183,28 @@ const DashboardScreen = (() => {
 
       container.innerHTML = html;
 
+      // Bind tappable elements
+      const weighInPill = document.getElementById('dash-pill-weighin');
+      if (weighInPill) {
+        weighInPill.addEventListener('click', () => {
+          App.switchTab('log');
+          setTimeout(() => App.navigateToScreen('log-body-metrics'), 50);
+        });
+      }
+      const reviewPill = document.getElementById('dash-pill-review');
+      if (reviewPill) {
+        reviewPill.addEventListener('click', () => {
+          App.switchTab('log');
+          setTimeout(() => App.navigateToScreen('log-weekly-review'), 50);
+        });
+      }
+      const bankCard = document.getElementById('dash-bank-balance');
+      if (bankCard) {
+        bankCard.addEventListener('click', () => {
+          App.navigateToScreen('dashboard-bank-ledger');
+        });
+      }
+
     } catch (err) {
       container.innerHTML = `
         <div class="empty-state">
@@ -206,7 +233,7 @@ const DashboardScreen = (() => {
 
   // Render on tab switch to Dashboard
   document.addEventListener('screen:enter', (e) => {
-    if (e.detail.screen === 'dashboard') render();
+    if (e.detail.screen === 'dashboard-main') render();
   });
 
   // Also render when Dashboard tab is active and we switch to it

@@ -58,6 +58,14 @@ const WeeklyReviewScreen = (() => {
       </div>
     `;
 
+    // === CURRENT WEEK SECTION ===
+    html += `
+      <div style="border-left: 3px solid var(--accent); padding-left: 12px; margin-bottom: 24px;">
+        <div style="font-size: 13px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px;">
+          Current Week — ${weekKey}
+        </div>
+    `;
+
     // Score summary
     html += `
       <div class="card">
@@ -134,25 +142,35 @@ const WeeklyReviewScreen = (() => {
       html += `</div>`;
     }
 
-    // Next week's goals
+    // Close current week section
+    html += `</div>`;
+
+    // === NEXT WEEK SECTION ===
     html += `
-      <div class="card mt-md">
-        <div class="card__title">Next Week's Goals</div>
-        <div class="text-secondary" style="font-size: 13px; margin-bottom: 12px;">
-          These goals will carry into next week. Modify via Settings → Goals.
+      <div style="border-left: 3px solid var(--text-muted); padding-left: 12px; margin-bottom: 20px;">
+        <div style="font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px;">
+          Next Week
         </div>
-        ${activeGoals.map(g => `
-          <div class="flex-between" style="padding: 4px 0;">
-            <span style="font-size: 14px;">${escHtml(g.Name)}</span>
-            <span class="text-muted" style="font-size: 13px;">${g.WeightPercent}%</span>
+        <div class="card">
+          <div class="text-secondary" style="font-size: 13px; margin-bottom: 12px;">
+            These goals will carry into next week.
           </div>
-        `).join('')}
+          ${activeGoals.map(g => `
+            <div class="flex-between" style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
+              <div>
+                <span style="font-size: 14px;">${escHtml(g.Name)}</span>
+                <span class="text-muted" style="font-size: 12px; margin-left: 6px;">${g.TargetValue} ${escHtml(g.TargetUnit)}</span>
+              </div>
+              <span class="text-muted" style="font-size: 13px;">${g.WeightPercent}%</span>
+            </div>
+          `).join('')}
+        </div>
       </div>
     `;
 
     // Action buttons
     html += `
-      <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; flex-direction: column; gap: 10px;">
         <button class="btn btn--primary btn--full" id="review-confirm-btn"
                 ${reviewCredited ? 'disabled' : ''}>
           ${reviewCredited ? '✓ Review Confirmed' : 'Confirm Review'}
@@ -229,7 +247,8 @@ const WeeklyReviewScreen = (() => {
     const modifyBtn = document.getElementById('review-modify-btn');
     if (modifyBtn) {
       modifyBtn.addEventListener('click', () => {
-        // Switch to Settings tab → Goals screen
+        // Set flag so Goals screen knows to return here
+        App._returnToWeeklyReview = true;
         App.switchTab('settings');
         setTimeout(() => App.navigateToScreen('settings-goals'), 50);
       });

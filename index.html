@@ -16,22 +16,34 @@
 
 <div id="app">
 
+  <div class="tab-content">
+
   <!-- ============================================================
        TAB: Dashboard
        ============================================================ -->
   <div class="tab-panel active" id="tab-dashboard" data-tab="dashboard">
-    <div class="screen-header">
-      <span class="screen-header__title">Dashboard</span>
-    </div>
-    <div class="screen-body" id="dashboard-content">
-      <!-- Populated by dashboard.js -->
-      <div class="empty-state">
-        <div class="empty-state__icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-        </div>
-        <div class="empty-state__text">Dashboard will show your weekly progress.<br>Set up goals and config first.</div>
+
+    <!-- Dashboard: Main (root screen) -->
+    <div class="tab-panel__screen active" data-screen="dashboard-main">
+      <div class="screen-header">
+        <span class="screen-header__title">Dashboard</span>
+      </div>
+      <div class="screen-body" id="dashboard-content">
       </div>
     </div>
+
+    <!-- Dashboard: Bank Ledger (sub-screen) -->
+    <div class="tab-panel__screen" data-screen="dashboard-bank-ledger">
+      <div class="screen-header">
+        <button class="screen-header__back" data-back="dashboard-main" aria-label="Back">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <span class="screen-header__title">Bank Ledger</span>
+      </div>
+      <div class="screen-body" id="bank-ledger-content">
+      </div>
+    </div>
+
   </div>
 
   <!-- ============================================================
@@ -44,47 +56,8 @@
       <div class="screen-header">
         <span class="screen-header__title">Log</span>
       </div>
-      <div class="screen-body">
-        <div class="menu-list">
-          <div class="menu-item" data-navigate="log-activity">
-            <div class="menu-item__icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <div>
-              <div class="menu-item__label">Log Activity</div>
-              <div class="menu-item__sublabel">Manual goal entry</div>
-            </div>
-            <div class="menu-item__chevron">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-          </div>
-
-          <div class="menu-item" data-navigate="log-body-metrics">
-            <div class="menu-item__icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-            </div>
-            <div>
-              <div class="menu-item__label">Log Body Metrics</div>
-              <div class="menu-item__sublabel">Weight &amp; measurements</div>
-            </div>
-            <div class="menu-item__chevron">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-          </div>
-
-          <div class="menu-item" data-navigate="log-weekly-review">
-            <div class="menu-item__icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            </div>
-            <div>
-              <div class="menu-item__label">Weekly Review</div>
-              <div class="menu-item__sublabel">Review &amp; confirm goals</div>
-            </div>
-            <div class="menu-item__chevron">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-          </div>
-        </div>
+      <div class="screen-body" id="log-menu-content">
+        <!-- Populated by log-menu.js -->
       </div>
     </div>
 
@@ -293,6 +266,8 @@
 
   </div>
 
+  </div> <!-- /.tab-content -->
+
   <!-- ============================================================
        Bottom Tab Bar
        ============================================================ -->
@@ -322,9 +297,11 @@
 <script src="config.js"></script>
 <script src="goals.js"></script>
 <script src="rewards.js"></script>
+<script src="log-menu.js"></script>
 <script src="log-activity.js"></script>
 <script src="log-body-metrics.js"></script>
 <script src="weekly-review.js"></script>
 <script src="dashboard.js"></script>
+<script src="bank-ledger.js"></script>
 </body>
 </html>
