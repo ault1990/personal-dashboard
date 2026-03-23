@@ -1,9 +1,24 @@
-const CACHE_NAME = 'pd-shell-v1';
+const CACHE_NAME = 'pd-shell-v2';
 const SHELL_ASSETS = [
-  '/index.html',
-  '/styles.css',
-  '/app.js',
-  '/manifest.json'
+  './',
+  './index.html',
+  './styles.css',
+  './app.js',
+  './api.js',
+  './auth.js',
+  './config.js',
+  './goals.js',
+  './rewards.js',
+  './log-menu.js',
+  './log-activity.js',
+  './log-body-metrics.js',
+  './weekly-review.js',
+  './dashboard.js',
+  './bank-ledger.js',
+  './msal-browser.min.js',
+  './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -24,7 +39,7 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   // Network-first for API calls, cache-first for shell assets
-  if (event.request.url.includes('/sites/') || event.request.url.includes('graph.microsoft.com')) {
+  if (event.request.url.includes('/sites/') || event.request.url.includes('graph.microsoft.com') || event.request.url.includes('login.microsoftonline.com')) {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
     );
