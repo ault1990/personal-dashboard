@@ -14,9 +14,7 @@ const Auth = (() => {
   const SITE_URL = 'https://batterandbake.sharepoint.com/sites/PersonalDashboard';
 
   // Scopes needed for SharePoint list CRUD
-  const SCOPES = [`${SITE_URL}/.default`];
-  // Fallback if .default doesn't work with delegated perms
-  const SCOPES_FALLBACK = ['https://batterandbake.sharepoint.com/.default'];
+  const SCOPES = ['https://batterandbake.sharepoint.com/.default'];
 
   let msalInstance = null;
   let activeAccount = null;
@@ -44,21 +42,21 @@ const Auth = (() => {
 
   async function login() {
     try {
-      // Try silent login first (returning user with cached token)
-      const accounts = msalInstance.getAllAccounts();
-      if (accounts.length > 0) {
-        activeAccount = accounts[0];
-        msalInstance.setActiveAccount(activeAccount);
-        console.log('[Auth] Found cached account:', activeAccount.username);
-        return true;
-      }
-
       // Handle redirect response (if returning from login redirect)
       const redirectResponse = await msalInstance.handleRedirectPromise();
       if (redirectResponse) {
         activeAccount = redirectResponse.account;
         msalInstance.setActiveAccount(activeAccount);
         console.log('[Auth] Login via redirect:', activeAccount.username);
+        return true;
+      }
+
+      // Try silent login first (returning user with cached token)
+      const accounts = msalInstance.getAllAccounts();
+      if (accounts.length > 0) {
+        activeAccount = accounts[0];
+        msalInstance.setActiveAccount(activeAccount);
+        console.log('[Auth] Found cached account:', activeAccount.username);
         return true;
       }
 
@@ -106,24 +104,15 @@ const Auth = (() => {
       const response = await msalInstance.acquireTokenSilent(tokenRequest);
       return response.accessToken;
     } catch (silentErr) {
-      console.warn('[Auth] Silent token failed, trying fallback scopes...', silentErr);
+      console.warn('[Auth] Silent token failed, trying popup...', silentErr);
 
-      // Try fallback scopes
+      // Silent failed — need interactive consent
       try {
-        const fallbackRequest = { scopes: SCOPES_FALLBACK, account: activeAccount };
-        const response = await msalInstance.acquireTokenSilent(fallbackRequest);
+        const response = await msalInstance.acquireTokenPopup(tokenRequest);
         return response.accessToken;
-      } catch (fallbackErr) {
-        console.warn('[Auth] Fallback silent failed, trying popup...', fallbackErr);
-
-        // Silent failed — need interactive consent
-        try {
-          const response = await msalInstance.acquireTokenPopup(tokenRequest);
-          return response.accessToken;
-        } catch (popupErr) {
-          console.error('[Auth] Token acquisition failed:', popupErr);
-          throw popupErr;
-        }
+      } catch (popupErr) {
+        console.error('[Auth] Token acquisition failed:', popupErr);
+        throw popupErr;
       }
     }
   }
