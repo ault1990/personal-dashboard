@@ -161,11 +161,53 @@ const App = (() => {
     return `$${Number(amount).toFixed(2)}`;
   }
 
+  // --- Auth-Gated Startup ---
+
+  function showAuthStatus(message, isError) {
+    const container = document.getElementById('dashboard-content');
+    if (!container) return;
+    const color = isError ? 'var(--color-danger)' : 'var(--text-muted)';
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state__text" style="color: ${color};">
+          ${message}
+        </div>
+      </div>
+    `;
+  }
+
+  async function initAuth() {
+    showAuthStatus('Signing in…', false);
+
+    try {
+      const authSuccess = await Auth.init();
+      if (authSuccess) {
+        console.log('[App] Auth succeeded — live SharePoint mode');
+        showAuthStatus('Connected. Loading…', false);
+      } else {
+        console.log('[App] Auth failed — falling back to mock mode');
+        API.setMockMode();
+        showAuthStatus('Offline mode — using local data', false);
+      }
+    } catch (err) {
+      console.error('[App] Auth error:', err);
+      API.setMockMode();
+      showAuthStatus('Auth error — using local data', true);
+    }
+
+    // Fire initial screen:enter for Dashboard so it renders
+    document.dispatchEvent(new CustomEvent('screen:enter', {
+      detail: { tab: 'dashboard', screen: 'dashboard-main' }
+    }));
+  }
+
   // --- Init ---
 
   function init() {
     bindEvents();
     registerServiceWorker();
+    // Kick off auth — dashboard renders after auth resolves
+    initAuth();
   }
 
   // Run on DOM ready

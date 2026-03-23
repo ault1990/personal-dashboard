@@ -2,16 +2,16 @@
    PersonalDashboard — API Layer
    All SharePoint CRUD operations go through this module.
    
-   Currently uses a local mock data store for development.
-   When Microsoft OAuth is wired in, the mock layer is replaced
-   with real SharePoint REST API calls — no other module changes.
+   Mock layer for local development.
+   Real SharePoint REST calls when OAuth is connected.
+   USE_MOCK flips automatically based on Auth.init() result.
    ============================================================ */
 
 const API = (() => {
   'use strict';
 
   // --- Configuration ---
-  const USE_MOCK = true; // Flip to false when SharePoint is connected
+  let useMock = true; // Flipped to false by setAuth()
 
   // SharePoint site URL (set after OAuth)
   let siteUrl = '';
@@ -89,9 +89,23 @@ const API = (() => {
     return Promise.resolve(true);
   }
 
-  // --- SharePoint REST helpers (for when OAuth is live) ---
+  // --- SharePoint REST helpers ---
+
+  async function ensureFreshToken() {
+    // If Auth module exists and we're not in mock mode, refresh the token
+    if (typeof Auth !== 'undefined' && Auth.isAuthenticated) {
+      try {
+        accessToken = await Auth.getAccessToken();
+      } catch (err) {
+        console.error('[API] Token refresh failed:', err);
+        throw new Error('Authentication expired. Please reload the page.');
+      }
+    }
+  }
 
   async function spRequest(url, options = {}) {
+    await ensureFreshToken();
+
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -113,9 +127,11 @@ const API = (() => {
     return `${siteUrl}/_api/web/lists/getbytitle('${listName}')/items`;
   }
 
-  async function spGetItems(listName, filter) {
+  async function spGetItems(listName, odataFilter) {
     let url = listUrl(listName);
-    if (filter) url += `?$filter=${encodeURIComponent(filter)}`;
+    // SharePoint caps default page at 100 items; request up to 5000
+    url += '?$top=5000';
+    if (odataFilter) url += `&$filter=${encodeURIComponent(odataFilter)}`;
     const data = await spRequest(url);
     return data.value || [];
   }
@@ -150,42 +166,60 @@ const API = (() => {
   }
 
   // --- Public API (delegates to mock or SharePoint) ---
+  //
+  // `filter` parameter behavior:
+  //   Mock mode  → JavaScript function (item) => boolean
+  //   Live mode  → OData filter string, e.g. "Key eq 'WeeklyMaxEarning'"
+  //   If a JS function is passed in live mode, it's ignored (all items returned).
 
   function getItems(listName, filter) {
-    if (USE_MOCK) return mockGetItems(listName, filter);
-    return spGetItems(listName, typeof filter === 'string' ? filter : undefined);
+    if (useMock) return mockGetItems(listName, filter);
+    const odataFilter = typeof filter === 'string' ? filter : undefined;
+    return spGetItems(listName, odataFilter);
   }
 
   function getItem(listName, id) {
-    if (USE_MOCK) return mockGetItem(listName, id);
+    if (useMock) return mockGetItem(listName, id);
     return spGetItem(listName, id);
   }
 
   function createItem(listName, fields) {
-    if (USE_MOCK) return mockCreateItem(listName, fields);
+    if (useMock) return mockCreateItem(listName, fields);
     return spCreateItem(listName, fields);
   }
 
   function updateItem(listName, id, fields) {
-    if (USE_MOCK) return mockUpdateItem(listName, id, fields);
+    if (useMock) return mockUpdateItem(listName, id, fields);
     return spUpdateItem(listName, id, fields);
   }
 
   function deleteItem(listName, id) {
-    if (USE_MOCK) return mockDeleteItem(listName, id);
+    if (useMock) return mockDeleteItem(listName, id);
     return spDeleteItem(listName, id);
   }
 
   // --- Config convenience methods ---
+  //
+  // These use OData filters in live mode, JS filters in mock mode.
 
   async function getConfig(key) {
-    const items = await getItems('Config', (item) => item.Key === key);
+    let items;
+    if (useMock) {
+      items = await mockGetItems('Config', (item) => item.Key === key);
+    } else {
+      items = await spGetItems('Config', `Key eq '${key}'`);
+    }
     if (items.length === 0) return null;
     return items[0].Type === 'Number' ? Number(items[0].Value) : items[0].Value;
   }
 
   async function setConfig(key, value) {
-    const items = await getItems('Config', (item) => item.Key === key);
+    let items;
+    if (useMock) {
+      items = await mockGetItems('Config', (item) => item.Key === key);
+    } else {
+      items = await spGetItems('Config', `Key eq '${key}'`);
+    }
     if (items.length === 0) {
       return createItem('Config', { Key: key, Value: String(value), Type: 'Number' });
     }
@@ -202,6 +236,11 @@ const API = (() => {
   }
 
   // --- Bank convenience methods ---
+  //
+  // getBankBalance: fetches all transactions and sums client-side.
+  // No OData filter needed — we always need the full set.
+  //
+  // getRewardTotalAllocated: uses OData filter in live mode.
 
   async function getBankBalance() {
     const transactions = await getItems('BankTransactions');
@@ -214,15 +253,27 @@ const API = (() => {
   }
 
   async function getRewardTotalAllocated(rewardId) {
-    const debits = await getItems('BankTransactions', (t) => t.Type === 'debit' && t.RewardID === rewardId);
+    let debits;
+    if (useMock) {
+      debits = await mockGetItems('BankTransactions', (t) => t.Type === 'debit' && t.RewardID === rewardId);
+    } else {
+      debits = await spGetItems('BankTransactions', `Type eq 'debit' and RewardID eq ${rewardId}`);
+    }
     return debits.reduce((sum, t) => sum + t.Amount, 0);
   }
 
-  // --- Auth (placeholder for OAuth wiring) ---
+  // --- Auth ---
 
   function setAuth(token, site) {
     accessToken = token;
     siteUrl = site;
+    useMock = false; // Switch to live SharePoint
+    console.log('[API] Switched to live SharePoint mode');
+  }
+
+  function setMockMode() {
+    useMock = true;
+    console.log('[API] Switched to mock mode');
   }
 
   return {
@@ -237,6 +288,7 @@ const API = (() => {
     getBankBalance,
     getRewardTotalAllocated,
     setAuth,
-    get isMock() { return USE_MOCK; }
+    setMockMode,
+    get isMock() { return useMock; }
   };
 })();
