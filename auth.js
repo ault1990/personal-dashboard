@@ -10,7 +10,7 @@ const Auth = (() => {
   // --- MSAL Configuration ---
   const CLIENT_ID = '52d0b8ea-e074-48b6-803c-e50d2d4ef887';
   const AUTHORITY = 'https://login.microsoftonline.com/common';
-  const REDIRECT_URI = window.location.origin + '/index.html';
+  const REDIRECT_URI = window.location.origin + window.location.pathname;
   const SITE_URL = 'https://batterandbake.sharepoint.com/sites/PersonalDashboard';
 
   // Scopes needed for SharePoint list CRUD
