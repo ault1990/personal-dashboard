@@ -578,6 +578,81 @@ html, body {
   line-height: 1.5;
 }
 
+/* --- History Screen --- */
+.history-range-pills,
+.history-sport-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.history-pill {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  border: 1px solid var(--border-medium);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.history-pill:active {
+  background: var(--bg-raised);
+}
+
+.history-pill--active {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.history-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.history-stat-cell {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.history-stat-cell--normalized {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.history-stat-cell__label {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.history-stat-cell--normalized .history-stat-cell__label {
+  color: var(--accent);
+  opacity: 0.8;
+}
+
+.history-stat-cell__value {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  font-family: var(--font-mono), var(--font-body);
+}
+
+.history-stat-cell--normalized .history-stat-cell__value {
+  color: var(--accent);
+}
+
 /* --- Utilities --- */
 .sr-only {
   position: absolute;

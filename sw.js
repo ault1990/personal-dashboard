@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pd-shell-v2';
+const CACHE_NAME = 'pd-shell-v3';
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -15,6 +15,7 @@ const SHELL_ASSETS = [
   './weekly-review.js',
   './dashboard.js',
   './bank-ledger.js',
+  './history.js',
   './msal-browser.min.js',
   './manifest.json',
   './icons/icon-192.png',

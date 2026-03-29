@@ -36,7 +36,9 @@ const API = (() => {
     WeeklyGoalResults: [],
     WeeklyScores: [],
     Rewards: [],
-    BankTransactions: []
+    BankTransactions: [],
+    Activities: [],
+    StravaTokens: []
   };
 
   let mockIdCounters = {};
