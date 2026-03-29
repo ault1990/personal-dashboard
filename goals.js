@@ -312,10 +312,10 @@ const GoalsScreen = (() => {
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="goal-garmin">Garmin-Backed</label>
-          <select class="form-select" id="goal-garmin">
-            <option value="false" ${!goal?.IsGarminBacked ? 'selected' : ''}>No</option>
-            <option value="true" ${goal?.IsGarminBacked ? 'selected' : ''}>Yes</option>
+          <label class="form-label" for="goal-strava">Strava-Backed</label>
+          <select class="form-select" id="goal-strava">
+            <option value="false" ${!goal?.IsStravaBacked ? 'selected' : ''}>No</option>
+            <option value="true" ${goal?.IsStravaBacked ? 'selected' : ''}>Yes</option>
           </select>
         </div>
       `;
@@ -349,10 +349,10 @@ const GoalsScreen = (() => {
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="goal-garmin">Garmin-Backed</label>
-          <select class="form-select" id="goal-garmin">
-            <option value="false" ${!goal?.IsGarminBacked ? 'selected' : ''}>No</option>
-            <option value="true" ${goal?.IsGarminBacked ? 'selected' : ''}>Yes</option>
+          <label class="form-label" for="goal-strava">Strava-Backed</label>
+          <select class="form-select" id="goal-strava">
+            <option value="false" ${!goal?.IsStravaBacked ? 'selected' : ''}>No</option>
+            <option value="true" ${goal?.IsStravaBacked ? 'selected' : ''}>Yes</option>
           </select>
         </div>
       `;
@@ -375,8 +375,8 @@ const GoalsScreen = (() => {
     const name = document.getElementById('goal-name').value.trim();
     const notes = document.getElementById('goal-notes').value.trim();
     const targetValue = parseFloat(document.getElementById('goal-target-value').value);
-    const garminSelect = document.getElementById('goal-garmin');
-    const isGarminBacked = garminSelect ? garminSelect.value === 'true' : false;
+    const stravaSelect = document.getElementById('goal-strava');
+    const isStravaBacked = stravaSelect ? stravaSelect.value === 'true' : false;
 
     // Validation
     if (!name) {
@@ -405,7 +405,7 @@ const GoalsScreen = (() => {
       Name: name,
       GoalType: goalType,
       ActivityType: activityType,
-      IsGarminBacked: isGarminBacked,
+      IsStravaBacked: isStravaBacked,
       MeasurementType: measurementType,
       TargetValue: targetValue,
       TargetUnit: targetUnit,

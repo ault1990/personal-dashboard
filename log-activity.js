@@ -1,6 +1,6 @@
 /* ============================================================
    PersonalDashboard — Log → Log Activity
-   Manual entry for non-Garmin goals.
+   Manual entry for non-Strava goals.
    ============================================================ */
 
 const LogActivityScreen = (() => {
@@ -9,10 +9,10 @@ const LogActivityScreen = (() => {
   const container = document.getElementById('log-activity-content');
 
   async function render() {
-    // Get active non-Garmin, non-system goals
+    // Get active non-Strava, non-system goals
     const goals = await API.getItems('Goals');
     const eligible = goals.filter(g =>
-      g.WeightPercent > 0 && !g.IsGarminBacked && g.GoalType !== 'system'
+      g.WeightPercent > 0 && !g.IsStravaBacked && g.GoalType !== 'system'
     );
 
     if (eligible.length === 0) {
@@ -21,7 +21,7 @@ const LogActivityScreen = (() => {
           <div class="empty-state__icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
-          <div class="empty-state__text">No eligible goals for manual entry.<br>Create a non-Garmin goal in Settings first.</div>
+          <div class="empty-state__text">No eligible goals for manual entry.<br>Create a non-Strava goal in Settings first.</div>
         </div>
       `;
       return;

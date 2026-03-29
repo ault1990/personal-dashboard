@@ -24,12 +24,12 @@ const API = (() => {
       { ID: 2, Key: 'ExtraCreditCap', Value: '1.15', Type: 'Number' }
     ],
     Goals: [
-      { ID: 1, Name: 'Weekly Running Miles', GoalType: 'volume', ActivityType: 'run', IsGarminBacked: true, MeasurementType: 'distance', TargetValue: 15, TargetUnit: 'miles', WeightPercent: 25, Notes: '' },
-      { ID: 2, Name: 'Weekly Strength Sessions', GoalType: 'frequency', ActivityType: 'strength', IsGarminBacked: true, MeasurementType: 'session_count', TargetValue: 3, TargetUnit: 'sessions', WeightPercent: 25, Notes: '' },
-      { ID: 3, Name: 'Weekly Ride Minutes', GoalType: 'volume', ActivityType: 'ride', IsGarminBacked: true, MeasurementType: 'duration', TargetValue: 60, TargetUnit: 'minutes', WeightPercent: 20, Notes: '' },
-      { ID: 4, Name: 'Take Out Trash', GoalType: 'frequency', ActivityType: 'custom', IsGarminBacked: false, MeasurementType: 'session_count', TargetValue: 3, TargetUnit: 'sessions', WeightPercent: 10, Notes: '' },
-      { ID: 5, Name: 'Weekly Weigh-in', GoalType: 'system', ActivityType: 'body_metrics', IsGarminBacked: false, MeasurementType: 'session_count', TargetValue: 1, TargetUnit: 'check-ins', WeightPercent: 10, Notes: '' },
-      { ID: 6, Name: 'Weekly Review', GoalType: 'system', ActivityType: 'any', IsGarminBacked: false, MeasurementType: 'session_count', TargetValue: 1, TargetUnit: 'check-ins', WeightPercent: 10, Notes: '' }
+      { ID: 1, Name: 'Weekly Running Miles', GoalType: 'volume', ActivityType: 'run', IsStravaBacked: true, MeasurementType: 'distance', TargetValue: 15, TargetUnit: 'miles', WeightPercent: 25, Notes: '' },
+      { ID: 2, Name: 'Weekly Strength Sessions', GoalType: 'frequency', ActivityType: 'strength', IsStravaBacked: true, MeasurementType: 'session_count', TargetValue: 3, TargetUnit: 'sessions', WeightPercent: 25, Notes: '' },
+      { ID: 3, Name: 'Weekly Ride Minutes', GoalType: 'volume', ActivityType: 'ride', IsStravaBacked: true, MeasurementType: 'duration', TargetValue: 60, TargetUnit: 'minutes', WeightPercent: 20, Notes: '' },
+      { ID: 4, Name: 'Take Out Trash', GoalType: 'frequency', ActivityType: 'custom', IsStravaBacked: false, MeasurementType: 'session_count', TargetValue: 3, TargetUnit: 'sessions', WeightPercent: 10, Notes: '' },
+      { ID: 5, Name: 'Weekly Weigh-in', GoalType: 'system', ActivityType: 'body_metrics', IsStravaBacked: false, MeasurementType: 'session_count', TargetValue: 1, TargetUnit: 'check-ins', WeightPercent: 10, Notes: '' },
+      { ID: 6, Name: 'Weekly Review', GoalType: 'system', ActivityType: 'any', IsStravaBacked: false, MeasurementType: 'session_count', TargetValue: 1, TargetUnit: 'check-ins', WeightPercent: 10, Notes: '' }
     ],
     ActivityLog: [],
     BodyMetrics: [],

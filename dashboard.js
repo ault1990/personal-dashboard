@@ -33,7 +33,7 @@ const DashboardScreen = (() => {
       // Compute goal progress
       const goalProgress = activeGoals.map(goal => {
         let actual = 0;
-        if (goal.GoalType === 'system' || !goal.IsGarminBacked) {
+        if (goal.GoalType === 'system' || !goal.IsStravaBacked) {
           const entries = activityLog.filter(e => e.GoalID === goal.ID && e.WeekKey === weekKey);
           actual = entries.reduce((sum, e) => sum + e.Value, 0);
         }

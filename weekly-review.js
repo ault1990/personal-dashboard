@@ -191,12 +191,12 @@ const WeeklyReviewScreen = (() => {
     return activeGoals.map(goal => {
       let actual = 0;
 
-      if (goal.GoalType === 'system' || !goal.IsGarminBacked) {
+      if (goal.GoalType === 'system' || !goal.IsStravaBacked) {
         // Sum from ActivityLog
         const entries = activityLog.filter(e => e.GoalID === goal.ID && e.WeekKey === weekKey);
         actual = entries.reduce((sum, e) => sum + e.Value, 0);
       }
-      // Garmin-backed goals would aggregate from WorkoutSessions — Phase 2
+      // Strava-backed goals aggregate from Activities table
 
       const target = goal.TargetValue;
       const goalCap = goal.GoalType === 'system' ? 1.0 : cap;
