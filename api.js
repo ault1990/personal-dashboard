@@ -125,9 +125,9 @@ const API = (() => {
   async function spRequest(url, options = {}) {
     await ensureFreshToken();
 
-    // PATCH and DELETE require a request digest
-    const method = (options.method || 'GET').toUpperCase();
-    const needsDigest = method === 'PATCH' || method === 'DELETE';
+    // Writes that use X-HTTP-Method override (MERGE, DELETE) need a request digest
+    const overrideMethod = options.headers?.['X-HTTP-Method'];
+    const needsDigest = overrideMethod === 'MERGE' || overrideMethod === 'DELETE';
     let digestHeader = {};
     if (needsDigest) {
       const digest = await getRequestDigest();
@@ -180,8 +180,8 @@ const API = (() => {
   async function spUpdateItem(listName, id, fields) {
     const url = `${listUrl(listName)}(${id})`;
     return spRequest(url, {
-      method: 'PATCH',
-      headers: { 'IF-MATCH': '*' },
+      method: 'POST',
+      headers: { 'IF-MATCH': '*', 'X-HTTP-Method': 'MERGE' },
       body: JSON.stringify(fields)
     });
   }
@@ -189,8 +189,8 @@ const API = (() => {
   async function spDeleteItem(listName, id) {
     const url = `${listUrl(listName)}(${id})`;
     return spRequest(url, {
-      method: 'DELETE',
-      headers: { 'IF-MATCH': '*' }
+      method: 'POST',
+      headers: { 'IF-MATCH': '*', 'X-HTTP-Method': 'DELETE' }
     });
   }
 
