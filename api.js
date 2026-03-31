@@ -105,14 +105,41 @@ const API = (() => {
     }
   }
 
+  async function getRequestDigest() {
+    await ensureFreshToken();
+    const response = await fetch(`${siteUrl}/_api/contextinfo`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'application/json;odata=nometadata',
+        'Content-Length': '0'
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to get request digest: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.FormDigestValue;
+  }
+
   async function spRequest(url, options = {}) {
     await ensureFreshToken();
+
+    // PATCH and DELETE require a request digest
+    const method = (options.method || 'GET').toUpperCase();
+    const needsDigest = method === 'PATCH' || method === 'DELETE';
+    let digestHeader = {};
+    if (needsDigest) {
+      const digest = await getRequestDigest();
+      digestHeader = { 'X-RequestDigest': digest };
+    }
 
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Accept': 'application/json;odata=nometadata',
         'Content-Type': 'application/json;odata=nometadata',
+        ...digestHeader,
         ...options.headers
       },
       ...options

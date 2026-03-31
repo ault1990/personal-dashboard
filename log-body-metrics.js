@@ -167,8 +167,9 @@ const LogBodyMetricsScreen = (() => {
     const weighInGoal = goals.find(g => g.GoalType === 'system' && g.Name.toLowerCase() === 'weekly weigh-in');
     if (!weighInGoal) return;
 
-    // Check if credit already exists for this week
-    const existing = await API.getItems('ActivityLog', (entry) =>
+    // Check if credit already exists for this week (client-side filter — JS function filters are ignored in live mode)
+    const allEntries = await API.getItems('ActivityLog');
+    const existing = allEntries.filter(entry =>
       entry.GoalID === weighInGoal.ID && entry.WeekKey === weekKey
     );
     if (existing.length > 0) return; // Already credited
