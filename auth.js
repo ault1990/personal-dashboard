@@ -9,7 +9,8 @@ const Auth = (() => {
 
   // --- MSAL Configuration ---
   const CLIENT_ID = '52d0b8ea-e074-48b6-803c-e50d2d4ef887';
-  const AUTHORITY = 'https://login.microsoftonline.com/common';
+  const TENANT_ID = '62a9f921-a3b3-41ff-9105-2c2a9af65376';
+  const AUTHORITY = 'https://login.microsoftonline.com/' + TENANT_ID;
   const REDIRECT_URI = window.location.origin + window.location.pathname;
   const SITE_URL = 'https://batterandbake.sharepoint.com/sites/PersonalDashboard';
 
@@ -31,18 +32,18 @@ const Auth = (() => {
       auth: {
         clientId: CLIENT_ID,
         authority: AUTHORITY,
+        knownAuthorities: ['login.microsoftonline.com'],
         redirectUri: REDIRECT_URI,
-        // On mobile redirect flow, MSAL must handle the response on the
-        // landing page without trying to navigate back to the original URL.
-        // Setting this to true on mobile causes a GET to the token endpoint
-        // (which only accepts POST), producing AADSTS900561.
-        navigateToLoginRequestUrl: !isMobile()
+        navigateToLoginRequestUrl: false
       },
       cache: {
         cacheLocation: 'localStorage',
-        storeAuthStateInCookie: false
+        storeAuthStateInCookie: true
       }
     };
+
+    console.log('[Auth] REDIRECT_URI:', REDIRECT_URI);
+    console.log('[Auth] isMobile:', isMobile());
 
     msalInstance = new msal.PublicClientApplication(msalConfig);
   }
