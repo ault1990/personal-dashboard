@@ -32,7 +32,11 @@ const Auth = (() => {
         clientId: CLIENT_ID,
         authority: AUTHORITY,
         redirectUri: REDIRECT_URI,
-        navigateToLoginRequestUrl: true
+        // On mobile redirect flow, MSAL must handle the response on the
+        // landing page without trying to navigate back to the original URL.
+        // Setting this to true on mobile causes a GET to the token endpoint
+        // (which only accepts POST), producing AADSTS900561.
+        navigateToLoginRequestUrl: !isMobile()
       },
       cache: {
         cacheLocation: 'localStorage',
