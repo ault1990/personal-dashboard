@@ -152,7 +152,9 @@ const API = (() => {
       throw new Error(`SharePoint API error ${response.status}: ${err}`);
     }
     if (response.status === 204) return null; // No content (delete, update)
-    return response.json();
+    const text = await response.text();
+    if (!text) return null; // Empty body (e.g. MERGE/DELETE via POST)
+    return JSON.parse(text);
   }
 
   function listUrl(listName) {
