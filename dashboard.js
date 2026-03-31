@@ -22,8 +22,8 @@ const DashboardScreen = (() => {
       const maxEarning = config.WeeklyMaxEarning || 0;
 
       // System goal status
-      const reviewGoal = goals.find(g => g.GoalType === 'system' && g.Name === 'Weekly Review');
-      const weighInGoal = goals.find(g => g.GoalType === 'system' && g.Name === 'Weekly Weigh-in');
+      const reviewGoal = goals.find(g => g.GoalType === 'system' && g.Name.toLowerCase() === 'weekly review');
+      const weighInGoal = goals.find(g => g.GoalType === 'system' && g.Name.toLowerCase() === 'weekly weigh-in');
       const reviewCredited = reviewGoal
         ? activityLog.some(e => e.GoalID === reviewGoal.ID && e.WeekKey === weekKey)
         : false;

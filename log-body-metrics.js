@@ -164,7 +164,7 @@ const LogBodyMetricsScreen = (() => {
   async function creditWeighInGoal(weekKey) {
     // Find Weekly Weigh-in goal
     const goals = await API.getItems('Goals');
-    const weighInGoal = goals.find(g => g.GoalType === 'system' && g.Name === 'Weekly Weigh-in');
+    const weighInGoal = goals.find(g => g.GoalType === 'system' && g.Name.toLowerCase() === 'weekly weigh-in');
     if (!weighInGoal) return;
 
     // Check if credit already exists for this week

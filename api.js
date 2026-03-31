@@ -294,3 +294,6 @@ const API = (() => {
     get isMock() { return useMock; }
   };
 })();
+
+// Expose for browser console debugging (Firefox can't access top-level const)
+window._PD_API = API;

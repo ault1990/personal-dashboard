@@ -19,13 +19,13 @@ const WeeklyReviewScreen = (() => {
     const rewards = await API.getItems('Rewards');
 
     // Find Weekly Review goal and check if credit earned
-    const reviewGoal = goals.find(g => g.GoalType === 'system' && g.Name === 'Weekly Review');
+    const reviewGoal = goals.find(g => g.GoalType === 'system' && g.Name.toLowerCase() === 'weekly review');
     const reviewCredited = reviewGoal
       ? activityLog.some(e => e.GoalID === reviewGoal.ID && e.WeekKey === weekKey)
       : false;
 
     // Find Weekly Weigh-in goal and check credit
-    const weighInGoal = goals.find(g => g.GoalType === 'system' && g.Name === 'Weekly Weigh-in');
+    const weighInGoal = goals.find(g => g.GoalType === 'system' && g.Name.toLowerCase() === 'weekly weigh-in');
     const weighInCredited = weighInGoal
       ? activityLog.some(e => e.GoalID === weighInGoal.ID && e.WeekKey === weekKey)
       : false;
