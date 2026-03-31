@@ -125,8 +125,11 @@ const API = (() => {
   async function spRequest(url, options = {}) {
     await ensureFreshToken();
 
+    // Separate headers from other options to prevent overwrite
+    const { headers: callerHeaders, ...restOptions } = options;
+
     // Writes that use X-HTTP-Method override (MERGE, DELETE) need a request digest
-    const overrideMethod = options.headers?.['X-HTTP-Method'];
+    const overrideMethod = callerHeaders?.['X-HTTP-Method'];
     const needsDigest = overrideMethod === 'MERGE' || overrideMethod === 'DELETE';
     let digestHeader = {};
     if (needsDigest) {
@@ -135,14 +138,14 @@ const API = (() => {
     }
 
     const response = await fetch(url, {
+      ...restOptions,
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Accept': 'application/json;odata=nometadata',
         'Content-Type': 'application/json;odata=nometadata',
         ...digestHeader,
-        ...options.headers
-      },
-      ...options
+        ...callerHeaders
+      }
     });
     if (!response.ok) {
       const err = await response.text();
