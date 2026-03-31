@@ -19,6 +19,11 @@ const Auth = (() => {
   let msalInstance = null;
   let activeAccount = null;
 
+  // --- Mobile Detection ---
+  function isMobile() {
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  }
+
   // --- Initialize MSAL ---
 
   function createMsalInstance() {
@@ -60,7 +65,18 @@ const Auth = (() => {
         return true;
       }
 
-      // No cached session — trigger interactive login via popup
+      // No cached session — trigger interactive login
+      if (isMobile()) {
+        // Mobile: always use redirect (popups are unreliable on mobile browsers)
+        console.log('[Auth] Mobile detected — using redirect login');
+        await msalInstance.loginRedirect({
+          scopes: ['User.Read'],
+          prompt: 'select_account'
+        });
+        return false; // Page will redirect
+      }
+
+      // Desktop: try popup first
       const loginResponse = await msalInstance.loginPopup({
         scopes: ['User.Read'],
         prompt: 'select_account'
@@ -104,15 +120,21 @@ const Auth = (() => {
       const response = await msalInstance.acquireTokenSilent(tokenRequest);
       return response.accessToken;
     } catch (silentErr) {
-      console.warn('[Auth] Silent token failed, trying popup...', silentErr);
+      console.warn('[Auth] Silent token failed, trying interactive...', silentErr);
 
       // Silent failed — need interactive consent
       try {
+        if (isMobile()) {
+          // Mobile: use redirect for token acquisition too
+          await msalInstance.acquireTokenRedirect(tokenRequest);
+          return null; // Page will redirect; token acquired on return
+        }
+
         const response = await msalInstance.acquireTokenPopup(tokenRequest);
         return response.accessToken;
-      } catch (popupErr) {
-        console.error('[Auth] Token acquisition failed:', popupErr);
-        throw popupErr;
+      } catch (interactiveErr) {
+        console.error('[Auth] Token acquisition failed:', interactiveErr);
+        throw interactiveErr;
       }
     }
   }
@@ -120,10 +142,17 @@ const Auth = (() => {
   // --- Logout ---
 
   function logout() {
-    msalInstance.logoutPopup({
-      account: activeAccount,
-      postLogoutRedirectUri: REDIRECT_URI
-    });
+    if (isMobile()) {
+      msalInstance.logoutRedirect({
+        account: activeAccount,
+        postLogoutRedirectUri: REDIRECT_URI
+      });
+    } else {
+      msalInstance.logoutPopup({
+        account: activeAccount,
+        postLogoutRedirectUri: REDIRECT_URI
+      });
+    }
     activeAccount = null;
   }
 
