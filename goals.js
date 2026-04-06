@@ -233,7 +233,6 @@ const GoalsScreen = (() => {
     }
 
     const goalType = goal ? goal.GoalType : 'volume';
-    const isFrequency = goalType === 'frequency';
 
     detailContainer.innerHTML = `
       <div class="card">
@@ -248,13 +247,13 @@ const GoalsScreen = (() => {
         <div class="form-group">
           <label class="form-label" for="goal-activity-type">Activity Type</label>
           <select class="form-select" id="goal-activity-type">
-            <option value="run" ${goal?.ActivityType === 'run' ? 'selected' : ''}>Run</option>
-            <option value="ride" ${goal?.ActivityType === 'ride' ? 'selected' : ''}>Ride</option>
-            <option value="strength" ${goal?.ActivityType === 'strength' ? 'selected' : ''}>Strength</option>
-            <option value="any_cardio" ${goal?.ActivityType === 'any_cardio' ? 'selected' : ''}>Any Cardio</option>
-            <option value="body_metrics" ${goal?.ActivityType === 'body_metrics' ? 'selected' : ''}>Body Metrics</option>
-            <option value="any" ${goal?.ActivityType === 'any' ? 'selected' : ''}>Any</option>
-            <option value="custom" ${goal?.ActivityType === 'custom' ? 'selected' : ''}>Custom</option>
+            <option value="Run"           ${goal?.ActivityType === 'Run'           ? 'selected' : ''}>Run</option>
+            <option value="Ride"          ${goal?.ActivityType === 'Ride'          ? 'selected' : ''}>Ride</option>
+            <option value="WeightTraining" ${goal?.ActivityType === 'WeightTraining' ? 'selected' : ''}>Weight Training</option>
+            <option value="Walk"          ${goal?.ActivityType === 'Walk'          ? 'selected' : ''}>Walk</option>
+            <option value="Hike"          ${goal?.ActivityType === 'Hike'          ? 'selected' : ''}>Hike</option>
+            <option value="Yoga"          ${goal?.ActivityType === 'Yoga'          ? 'selected' : ''}>Yoga</option>
+            <option value="custom"        ${goal?.ActivityType === 'custom'        ? 'selected' : ''}>Custom</option>
           </select>
         </div>
 
@@ -325,11 +324,11 @@ const GoalsScreen = (() => {
         <div class="form-group">
           <label class="form-label" for="goal-measurement-type">Measurement Type</label>
           <select class="form-select" id="goal-measurement-type">
-            <option value="distance" ${goal?.MeasurementType === 'distance' ? 'selected' : ''}>Distance</option>
-            <option value="duration" ${goal?.MeasurementType === 'duration' ? 'selected' : ''}>Duration</option>
+            <option value="distance"      ${goal?.MeasurementType === 'distance'      ? 'selected' : ''}>Distance</option>
+            <option value="duration"      ${goal?.MeasurementType === 'duration'      ? 'selected' : ''}>Duration</option>
             <option value="session_count" ${goal?.MeasurementType === 'session_count' ? 'selected' : ''}>Session Count</option>
-            <option value="output" ${goal?.MeasurementType === 'output' ? 'selected' : ''}>Output</option>
-            <option value="custom" ${goal?.MeasurementType === 'custom' ? 'selected' : ''}>Custom</option>
+            <option value="output"        ${goal?.MeasurementType === 'output'        ? 'selected' : ''}>Output</option>
+            <option value="custom"        ${goal?.MeasurementType === 'custom'        ? 'selected' : ''}>Custom</option>
           </select>
         </div>
 
@@ -450,7 +449,6 @@ const GoalsScreen = (() => {
   document.addEventListener('click', (e) => {
     const backBtn = e.target.closest('[data-back="settings-menu"]');
     if (!backBtn) return;
-    // Only intercept if we're on the goals screen and the flag is set
     const goalsScreen = backBtn.closest('[data-screen="settings-goals"]');
     if (goalsScreen && App._returnToWeeklyReview) {
       e.stopPropagation();

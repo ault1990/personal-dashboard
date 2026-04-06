@@ -108,7 +108,7 @@ const WeeklyReviewScreen = (() => {
             </div>
             <div class="flex-between">
               <span class="text-muted" style="font-size: 12px;">
-                ${g.actual} / ${g.target} ${escHtml(g.unit)}
+                ${formatActual(g.actual, g.type, g.unit)} / ${g.target} ${escHtml(g.unit)}
               </span>
               <span class="text-muted" style="font-size: 12px;">
                 ${pct.toFixed(0)}% → ${g.weightedContribution.toFixed(1)} pts
@@ -232,6 +232,15 @@ const WeeklyReviewScreen = (() => {
         weightedContribution
       };
     });
+  }
+
+  function formatActual(actual, goalType, unit) {
+    // Frequency and system goals show integer
+    if (goalType === 'frequency' || goalType === 'system') {
+      return Math.floor(actual);
+    }
+    // Volume goals: one decimal place
+    return actual % 1 === 0 ? actual : actual.toFixed(1);
   }
 
   function bindEvents(reviewGoal, weekKey, alreadyCredited) {

@@ -50,115 +50,130 @@ const App = (() => {
     screens.forEach((screen, i) => {
       screen.classList.toggle('active', i === 0);
     });
-  }
 
-  // --- Sub-Screen Navigation ---
-
-  function navigateToScreen(screenName) {
-    // Find the screen within the currently active tab
-    const panel = document.querySelector(`.tab-panel[data-tab="${activeTab}"]`);
-    if (!panel) return;
-
-    const screens = panel.querySelectorAll('.tab-panel__screen');
-    screens.forEach((screen) => {
-      screen.classList.toggle('active', screen.dataset.screen === screenName);
-    });
-
-    // Fire a custom event so feature modules can react
-    document.dispatchEvent(new CustomEvent('screen:enter', {
-      detail: { tab: activeTab, screen: screenName }
-    }));
-  }
-
-  function navigateBack(targetScreen) {
-    navigateToScreen(targetScreen);
-  }
-
-  // --- Event Binding ---
-
-  function bindEvents() {
-    // Tab bar clicks
-    tabBarItems.forEach((item) => {
-      item.addEventListener('click', () => switchTab(item.dataset.tab));
-    });
-
-    // Menu item navigation (data-navigate attribute)
-    document.addEventListener('click', (e) => {
-      const menuItem = e.target.closest('[data-navigate]');
-      if (menuItem) {
-        navigateToScreen(menuItem.dataset.navigate);
-      }
-    });
-
-    // Back button navigation (data-back attribute)
-    document.addEventListener('click', (e) => {
-      const backBtn = e.target.closest('[data-back]');
-      if (backBtn) {
-        navigateBack(backBtn.dataset.back);
-      }
-    });
-  }
-
-  // --- Service Worker ---
-
-  function registerServiceWorker() {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch((err) => {
-        console.warn('SW registration failed:', err);
-      });
+    // Fire screen:enter for the root screen
+    const rootScreen = screens[0];
+    if (rootScreen) {
+      document.dispatchEvent(new CustomEvent('screen:enter', {
+        detail: { screen: rootScreen.dataset.screen }
+      }));
     }
   }
 
-  // --- WeekKey Utility ---
+  // --- Sub-screen Navigation ---
 
-  /**
-   * Returns the ISO week key (YYYY-WW) for a given date.
-   * ISO 8601: week starts Monday, week 1 contains the year's first Thursday.
-   */
-  function getWeekKey(date = new Date()) {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    // Set to nearest Thursday (current date + 4 - current day number, where Monday = 1, Sunday = 7)
-    const dayNum = d.getUTCDay() || 7;
-    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    const weekNum = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
-    return `${d.getUTCFullYear()}-${String(weekNum).padStart(2, '0')}`;
+  function navigateToScreen(screenName) {
+    // Find the screen element
+    const screenEl = document.querySelector(`[data-screen="${screenName}"]`);
+    if (!screenEl) return;
+
+    // Find the tab panel it belongs to
+    const tabPanel = screenEl.closest('.tab-panel');
+    if (!tabPanel) return;
+
+    // Hide all screens in this tab, show the target
+    tabPanel.querySelectorAll('.tab-panel__screen').forEach(s => {
+      s.classList.remove('active');
+    });
+    screenEl.classList.add('active');
+
+    // Fire screen:enter event
+    document.dispatchEvent(new CustomEvent('screen:enter', {
+      detail: { screen: screenName }
+    }));
   }
 
-  /**
-   * Returns the Monday and Sunday dates for the current ISO week.
-   */
-  function getCurrentWeekBounds(date = new Date()) {
-    const d = new Date(date);
-    const day = d.getDay();
-    // Adjust to Monday (day 0 = Sunday → offset -6, else offset 1-day)
-    const diffToMonday = day === 0 ? -6 : 1 - day;
-    const monday = new Date(d);
-    monday.setDate(d.getDate() + diffToMonday);
-    monday.setHours(0, 0, 0, 0);
+  // --- Tab bar click handlers ---
 
+  tabBarItems.forEach((item) => {
+    item.addEventListener('click', () => {
+      const tabName = item.dataset.tab;
+      switchTab(tabName);
+
+      // Fire screen:enter for the tab's root screen (tabs without sub-screens)
+      const panel = document.querySelector(`.tab-panel[data-tab="${tabName}"]`);
+      if (panel) {
+        const screens = panel.querySelectorAll('.tab-panel__screen');
+        if (screens.length === 0) {
+          // Tab has no sub-screens — fire screen:enter for the tab itself
+          document.dispatchEvent(new CustomEvent('screen:enter', {
+            detail: { screen: `${tabName}-main` }
+          }));
+        }
+      }
+    });
+  });
+
+  // --- Back button navigation ---
+
+  document.addEventListener('click', (e) => {
+    const backBtn = e.target.closest('[data-back]');
+    if (!backBtn) return;
+
+    const targetScreen = backBtn.dataset.back;
+
+    // Special case: going back to a tab root
+    const tabTargets = ['dashboard-main', 'log-menu', 'history-main', 'settings-menu'];
+    if (tabTargets.includes(targetScreen)) {
+      const tabMap = {
+        'dashboard-main': 'dashboard',
+        'log-menu': 'log',
+        'history-main': 'history',
+        'settings-menu': 'settings'
+      };
+      const tabName = tabMap[targetScreen];
+      if (tabName) {
+        switchTab(tabName);
+        return;
+      }
+    }
+
+    navigateToScreen(targetScreen);
+  });
+
+  // --- Sub-screen link navigation ---
+
+  document.addEventListener('click', (e) => {
+    const navEl = e.target.closest('[data-navigate]');
+    if (!navEl) return;
+    navigateToScreen(navEl.dataset.navigate);
+  });
+
+  // --- Week utilities ---
+
+  function getWeekKey(date) {
+    const d = date ? new Date(date) : new Date();
+    // ISO 8601 week: week starts Monday
+    const day = d.getDay() || 7; // Mon=1..Sun=7
+    d.setDate(d.getDate() + 4 - day); // Thursday of this week
+    const yearStart = new Date(d.getFullYear(), 0, 1);
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    const year = d.getFullYear();
+    return `${year}-${String(weekNo).padStart(2, '0')}`;
+  }
+
+  function getCurrentWeekBounds() {
+    const now = new Date();
+    const day = now.getDay() || 7;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - day + 1);
+    monday.setHours(0, 0, 0, 0);
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
     sunday.setHours(23, 59, 59, 999);
-
-    return { monday, sunday };
+    return { start: monday, end: sunday };
   }
 
-  /**
-   * Formats a date as YYYY-MM-DD for input fields.
-   */
   function formatDateInput(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
+    const d = date || new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   }
 
-  /**
-   * Formats a number as currency string.
-   */
   function formatCurrency(amount) {
-    return `$${Number(amount).toFixed(2)}`;
+    return Number(amount).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
   }
 
   // --- Auth-Gated Startup ---
@@ -168,56 +183,51 @@ const App = (() => {
     if (!container) return;
     const color = isError ? 'var(--color-danger)' : 'var(--text-muted)';
     container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state__text" style="color: ${color};">
-          ${message}
-        </div>
+      <div style="text-align: center; padding: 40px 20px; color: ${color}; font-size: 14px;">
+        ${message}
       </div>
     `;
   }
 
-  async function initAuth() {
+  async function init() {
     showAuthStatus('Signing in…', false);
 
     try {
-      const authSuccess = await Auth.init();
-      if (authSuccess) {
-        console.log('[App] Auth succeeded — live SharePoint mode');
-        showAuthStatus('Connected. Loading…', false);
+      if (typeof Auth !== 'undefined') {
+        const result = await Auth.init();
+        if (result && result.token && result.siteUrl) {
+          API.setAuth(result.token, result.siteUrl);
+        } else {
+          // Auth failed or returned nothing — fall back to mock
+          API.setMockMode();
+          showAuthStatus('Running in demo mode (auth unavailable)', false);
+        }
       } else {
-        console.log('[App] Auth failed — falling back to mock mode');
         API.setMockMode();
-        showAuthStatus('Offline mode — using local data', false);
       }
     } catch (err) {
-      console.error('[App] Auth error:', err);
+      console.error('[App] Auth init failed:', err);
       API.setMockMode();
-      showAuthStatus('Auth error — using local data', true);
+      showAuthStatus('Running in demo mode (auth failed)', true);
     }
 
-    // Fire initial screen:enter for Dashboard so it renders
+    // Fire initial Dashboard render
     document.dispatchEvent(new CustomEvent('screen:enter', {
-      detail: { tab: 'dashboard', screen: 'dashboard-main' }
+      detail: { screen: 'dashboard-main' }
     }));
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(err => {
+        console.warn('[App] Service worker registration failed:', err);
+      });
+    }
   }
 
-  // --- Init ---
+  // --- Global flag for Weekly Review return navigation ---
+  let _returnToWeeklyReview = false;
 
-  function init() {
-    bindEvents();
-    registerServiceWorker();
-    // Kick off auth — dashboard renders after auth resolves
-    initAuth();
-  }
-
-  // Run on DOM ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-
-  // Public API for use by feature modules
+  // --- Public API ---
   return {
     switchTab,
     navigateToScreen,
@@ -225,6 +235,11 @@ const App = (() => {
     getCurrentWeekBounds,
     formatDateInput,
     formatCurrency,
-    get activeTab() { return activeTab; }
+    init,
+    get _returnToWeeklyReview() { return _returnToWeeklyReview; },
+    set _returnToWeeklyReview(val) { _returnToWeeklyReview = val; }
   };
 })();
+
+// Kick off auth-gated startup
+App.init();

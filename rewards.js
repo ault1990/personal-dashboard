@@ -21,6 +21,12 @@ const RewardsScreen = (() => {
     return 'Active';
   }
 
+  // Truncate ISO timestamp to YYYY-MM-DD for date inputs and display
+  function toDateString(val) {
+    if (!val) return '';
+    return String(val).split('T')[0];
+  }
+
   // --- Reward List Screen ---
 
   async function renderList() {
@@ -147,7 +153,7 @@ const RewardsScreen = (() => {
         <div class="form-group">
           <label class="form-label" for="reward-start-date">Start Date</label>
           <input class="form-input" type="date" id="reward-start-date"
-                 value="${reward ? reward.StartDate : App.formatDateInput(new Date())}">
+                 value="${reward ? toDateString(reward.StartDate) : App.formatDateInput(new Date())}">
         </div>
 
         <div id="reward-detail-message" style="margin-bottom: 12px;"></div>
@@ -169,7 +175,7 @@ const RewardsScreen = (() => {
         </div>
         <div class="flex-between mb-sm">
           <span class="text-secondary" style="font-size: 13px;">Completed</span>
-          <span class="text-success" style="font-weight: 600;">${reward.CompletedDate}</span>
+          <span class="text-success" style="font-weight: 600;">${toDateString(reward.CompletedDate)}</span>
         </div>
       `;
     }
@@ -212,7 +218,7 @@ const RewardsScreen = (() => {
           <div class="card__title">Allocation History</div>
           ${transactions.map(t => `
             <div class="flex-between" style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle);">
-              <span class="text-secondary" style="font-size: 13px;">${t.Date}</span>
+              <span class="text-secondary" style="font-size: 13px;">${toDateString(t.Date)}</span>
               <span style="font-weight: 600; font-size: 14px;">${App.formatCurrency(t.Amount)}</span>
             </div>
           `).join('')}
@@ -353,9 +359,7 @@ const RewardsScreen = (() => {
 
   function copyReward(sourceReward) {
     editingRewardId = null;
-    // Navigate to detail, then pre-populate after render
     App.navigateToScreen('settings-reward-detail');
-    // Use a microtask to fill fields after render
     setTimeout(() => {
       const nameInput = document.getElementById('reward-name');
       const descInput = document.getElementById('reward-description');

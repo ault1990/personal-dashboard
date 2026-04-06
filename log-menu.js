@@ -16,6 +16,7 @@ const LogMenuScreen = (() => {
     const goals = await API.getItems('Goals');
     const activeGoals = goals.filter(g => g.WeightPercent > 0);
     const activityLog = await API.getItems('ActivityLog');
+    const activities = await API.getItems('Activities');
     const cap = config.ExtraCreditCap || 1.15;
 
     // Compute goal progress
@@ -24,6 +25,23 @@ const LogMenuScreen = (() => {
       if (goal.GoalType === 'system' || !goal.IsStravaBacked) {
         const entries = activityLog.filter(e => e.GoalID === goal.ID && e.WeekKey === weekKey);
         actual = entries.reduce((sum, e) => sum + e.Value, 0);
+      } else {
+        // Strava-backed: aggregate from Activities by SportType + WeekKey per §7.8
+        const matching = activities.filter(a => a.SportType === goal.ActivityType && a.WeekKey === weekKey);
+        switch (goal.MeasurementType) {
+          case 'distance':
+            actual = matching.reduce((sum, a) => sum + (a.DistanceMeters || 0), 0) / 1609.34;
+            break;
+          case 'duration':
+            actual = matching.reduce((sum, a) => sum + (a.MovingTimeSeconds || 0), 0) / 60;
+            break;
+          case 'session_count':
+            actual = matching.length;
+            break;
+          case 'output':
+            actual = matching.reduce((sum, a) => sum + (a.Kilojoules || 0), 0);
+            break;
+        }
       }
       const target = goal.TargetValue;
       const goalCap = goal.GoalType === 'system' ? 1.0 : cap;
