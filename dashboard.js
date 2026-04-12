@@ -77,17 +77,17 @@ const DashboardScreen = (() => {
 
       let html = '';
 
-      // 1. System goal pills — always tappable regardless of credit status
+      // 1. System goal pills — tappable when pending
       html += `
         <div style="display: flex; gap: 8px; margin-bottom: 16px;">
           <span class="pill pill--${weighInCredited ? 'success' : 'warning'}"
-                id="dash-pill-weighin"
-                style="flex: 1; justify-content: center; cursor: pointer;">
+                style="flex: 1; justify-content: center; ${!weighInCredited ? 'cursor: pointer;' : ''}"
+                ${!weighInCredited ? 'id="dash-pill-weighin"' : ''}>
             ${weighInCredited ? '✓' : '○'} Weigh-in
           </span>
           <span class="pill pill--${reviewCredited ? 'success' : 'warning'}"
-                id="dash-pill-review"
-                style="flex: 1; justify-content: center; cursor: pointer;">
+                style="flex: 1; justify-content: center; ${!reviewCredited ? 'cursor: pointer;' : ''}"
+                ${!reviewCredited ? 'id="dash-pill-review"' : ''}>
             ${reviewCredited ? '✓' : '○'} Review
           </span>
         </div>
@@ -130,7 +130,7 @@ const DashboardScreen = (() => {
       if (goalProgress.length > 0) {
         html += `<div class="section-gap">`;
         goalProgress.forEach(({ goal, actual, target, completionRatio, weightedContribution }) => {
-          const pct = Math.min(completionRatio * 100, 115);
+          const pct = Math.min(completionRatio * 100, cap * 100);
           const barPct = Math.min(pct, 100);
           html += `
             <div class="card">
@@ -201,15 +201,21 @@ const DashboardScreen = (() => {
 
       container.innerHTML = html;
 
-      // Bind tappable elements — pills always navigate regardless of credit status
-      document.getElementById('dash-pill-weighin').addEventListener('click', () => {
-        App.switchTab('log');
-        setTimeout(() => App.navigateToScreen('log-body-metrics'), 50);
-      });
-      document.getElementById('dash-pill-review').addEventListener('click', () => {
-        App.switchTab('log');
-        setTimeout(() => App.navigateToScreen('log-weekly-review'), 50);
-      });
+      // Bind tappable elements
+      const weighInPill = document.getElementById('dash-pill-weighin');
+      if (weighInPill) {
+        weighInPill.addEventListener('click', () => {
+          App.switchTab('log');
+          setTimeout(() => App.navigateToScreen('log-body-metrics'), 50);
+        });
+      }
+      const reviewPill = document.getElementById('dash-pill-review');
+      if (reviewPill) {
+        reviewPill.addEventListener('click', () => {
+          App.switchTab('log');
+          setTimeout(() => App.navigateToScreen('log-weekly-review'), 50);
+        });
+      }
       const bankCard = document.getElementById('dash-bank-balance');
       if (bankCard) {
         bankCard.addEventListener('click', () => {
@@ -249,9 +255,12 @@ const DashboardScreen = (() => {
   });
 
   // Also render when Dashboard tab is active and we switch to it
+  // The tab-switch doesn't fire screen:enter for tabs without sub-screens,
+  // so we listen for tab clicks directly.
   const dashboardTabBtn = document.querySelector('.tab-bar__item[data-tab="dashboard"]');
   if (dashboardTabBtn) {
     dashboardTabBtn.addEventListener('click', () => {
+      // Small delay to let tab switch complete
       setTimeout(render, 10);
     });
   }
