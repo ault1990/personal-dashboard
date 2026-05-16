@@ -13,7 +13,12 @@ const DashboardScreen = (() => {
       const weekKey = App.getWeekKey();
       const config = await API.getAllConfig();
       const goals = await API.getItems('Goals');
-      const activeGoals = goals.filter(g => g.WeightPercent > 0);
+      const activeGoals = goals
+        .filter(g => g.WeightPercent > 0)
+        .sort((a, b) => {
+          if (a.WeightPercent !== b.WeightPercent) return b.WeightPercent - a.WeightPercent;
+          return a.Name.localeCompare(b.Name);
+        });
       const activityLog = await API.getItems('ActivityLog');
       const activities = await API.getItems('Activities');
       const bankBalance = await API.getBankBalance();
@@ -132,11 +137,49 @@ const DashboardScreen = (() => {
         goalProgress.forEach(({ goal, actual, target, completionRatio, weightedContribution }) => {
           const pct = Math.min(completionRatio * 100, cap * 100);
           const barPct = Math.min(pct, 100);
+          const isSystem = goal.GoalType === 'system';
+          const goalCapVal = isSystem ? 1.0 : cap;
+          const maxVal = isSystem ? null : target * goalCapVal;
+          const activityLabel = formatActivityType(goal.ActivityType);
+          const measureLabel = goal.MeasurementType === 'session_count' ? 'Sessions'
+            : goal.MeasurementType === 'distance' ? 'Distance'
+            : goal.MeasurementType === 'duration' ? 'Duration'
+            : goal.MeasurementType === 'output' ? 'Output'
+            : escHtml(goal.MeasurementType);
+          const typeLabel = `${activityLabel} · ${measureLabel}`;
+
+          // Gap lines
+          const gapTo100 = target - actual;
+          const gapToMax = maxVal !== null ? maxVal - actual : null;
+          let gap100Html, gapMaxHtml;
+          if (isSystem) {
+            gap100Html = actual >= target
+              ? `<span style="color:var(--color-success);">✓ Completed</span>`
+              : `<span style="color:var(--color-warning);">Pending</span>`;
+            gapMaxHtml = '';
+          } else {
+            if (actual >= target) {
+              gap100Html = `<span style="color:var(--color-success);">✓ 100% reached</span>`;
+            } else {
+              gap100Html = `<span style="color:var(--accent);">${formatActual(gapTo100, goal)} ${escHtml(goal.TargetUnit)} to 100%</span>`;
+            }
+            if (actual >= maxVal) {
+              gapMaxHtml = `<span style="color:var(--color-success);">✓ Max reached</span>`;
+            } else if (actual >= target) {
+              gapMaxHtml = `<span style="color:var(--accent);">${formatActual(gapToMax, goal)} ${escHtml(goal.TargetUnit)} to max</span>`;
+            } else {
+              gapMaxHtml = `<span style="color:var(--text-muted);">${formatActual(gapToMax, goal)} ${escHtml(goal.TargetUnit)} to max</span>`;
+            }
+          }
+
           html += `
             <div class="card">
               <div class="flex-between mb-sm">
-                <span style="font-weight: 600; font-size: 14px;">${escHtml(goal.Name)}</span>
-                <span style="font-size: 13px; font-weight: 600; color: ${pct >= 100 ? 'var(--color-success)' : 'var(--accent)'};">
+                <div>
+                  <div style="font-weight: 600; font-size: 14px;">${escHtml(goal.Name)}</div>
+                  <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1px;">${typeLabel}</div>
+                </div>
+                <span style="font-size: 16px; font-weight: 700; color: ${pct >= 100 ? 'var(--color-success)' : 'var(--accent)'};">
                   ${pct.toFixed(0)}%
                 </span>
               </div>
@@ -144,13 +187,27 @@ const DashboardScreen = (() => {
                 <div class="progress-bar__fill ${pct >= 100 ? 'progress-bar__fill--success' : ''}"
                      style="width: ${barPct}%;"></div>
               </div>
+              <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <div style="flex:1; background:var(--bg-raised); border-radius:6px; padding:7px 10px;">
+                  <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Actual</div>
+                  <div style="font-size:13px; font-weight:600; font-family:var(--font-mono); color:${pct >= 100 ? 'var(--color-success)' : 'var(--accent)'};">${formatActual(actual, goal)} ${escHtml(goal.TargetUnit)}</div>
+                </div>
+                <div style="flex:1; background:var(--bg-raised); border-radius:6px; padding:7px 10px;">
+                  <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">100% Goal</div>
+                  <div style="font-size:13px; font-weight:600; font-family:var(--font-mono); color:var(--text-primary);">${target} ${escHtml(goal.TargetUnit)}</div>
+                </div>
+                <div style="flex:1; background:var(--bg-raised); border-radius:6px; padding:7px 10px; ${isSystem ? 'opacity:0.35;' : ''}">
+                  <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Max</div>
+                  <div style="font-size:13px; font-weight:600; font-family:var(--font-mono); color:var(--text-primary);">${isSystem ? '—' : `${formatActual(maxVal, goal)} ${escHtml(goal.TargetUnit)}`}</div>
+                </div>
+              </div>
+              <div style="height:1px; background:var(--border-subtle); margin-bottom:10px;"></div>
               <div class="flex-between">
-                <span class="text-muted" style="font-size: 12px;">
-                  ${formatActual(actual, goal)} / ${target} ${escHtml(goal.TargetUnit)}
-                </span>
-                <span class="text-muted" style="font-size: 12px;">
-                  ${goal.WeightPercent}% weight · ${weightedContribution.toFixed(1)} pts
-                </span>
+                <span style="font-size:11px; color:var(--text-muted);">Weight <span style="color:var(--text-secondary);">${goal.WeightPercent}%</span> · Points <span style="color:var(--text-secondary);">${weightedContribution.toFixed(1)}</span></span>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; font-size:11px;">
+                  ${gap100Html}
+                  ${gapMaxHtml}
+                </div>
               </div>
             </div>
           `;
@@ -232,6 +289,12 @@ const DashboardScreen = (() => {
         </div>
       `;
     }
+  }
+
+  function formatActivityType(type) {
+    if (!type) return '';
+    // Insert space before each uppercase letter that follows a lowercase letter (PascalCase → words)
+    return type.replace(/([a-z])([A-Z])/g, '$1 $2');
   }
 
   function formatActual(actual, goal) {

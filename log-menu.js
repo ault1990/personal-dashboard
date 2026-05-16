@@ -14,7 +14,12 @@ const LogMenuScreen = (() => {
     const weekKey = App.getWeekKey();
     const config = await API.getAllConfig();
     const goals = await API.getItems('Goals');
-    const activeGoals = goals.filter(g => g.WeightPercent > 0);
+    const activeGoals = goals
+      .filter(g => g.WeightPercent > 0)
+      .sort((a, b) => {
+        if (a.WeightPercent !== b.WeightPercent) return b.WeightPercent - a.WeightPercent;
+        return a.Name.localeCompare(b.Name);
+      });
     const activityLog = await API.getItems('ActivityLog');
     const activities = await API.getItems('Activities');
     const cap = config.ExtraCreditCap || 1.15;
